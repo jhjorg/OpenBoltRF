@@ -4,11 +4,14 @@
 OpenBoltRF is an open-source workflow to analyse the load transfer for geometrically imperfect bolted ring-flanges in offshore wind turbine support structures. It is intended as a lightweight, portable package for users familiar with FreeCAD, Salome Meca / Code Aster, Paraview, and Python. 
 
 # Pre-requisites
-The use of OpenBoltRF assumes execution on a Linux-based system, with access to the following pre-requisites:- 
+The use of OpenBoltRF assumes execution on Ubuntu (tested on 18.04.6 LTS, no guarantee on other versions), with access to the following pre-requisites:- 
   - FreeCAD 0.21.0     or later
   - Salome Meca 2021   or later
     - Singularity container installation, including Paravis
   - Python 3.8.5       or later
+    - matplotlib>=3.3.2
+    - numpy>=1.19.2
+    - pandas>=1.2.1
 
 
 the following tools are pre-installed 
