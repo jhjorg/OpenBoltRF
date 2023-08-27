@@ -3,6 +3,19 @@
 
 OpenBoltRF is an open-source workflow to analyse the load transfer for geometrically imperfect bolted ring-flanges in offshore wind turbine support structures. It is intended as a lightweight, portable package for users familiar with FreeCAD, Salome Meca / Code Aster, Paraview, and Python. 
 
+# Structure
+The package contains a script for controlling all actions, _main.py_. 
+
+Within _main.py_, a datafile specifying the parameters of the flange (dimensions, material properties), _Flange_params.py_, is imported. A setup file specifying the particulars of the project (filenames, paths etc.), _setup.py_, is also imported by _main.py_. The values for variables in both _Flange_params.py_ and _setup.py_ may be configured by the user, but the variables names must not be altered.
+
+With the flange parameters and project details specified the execution of the workflow may be completed. The general order is as follows:-
+
+  - The geometry is generated using the _geom_ module. _geom_ calls **FreeCAD**, and executes a script in the **FreeCAD Python console** to generate .stp files for the flange under study.
+ 
+  - A mesh is generated from the .stp files, using the _mesh_ module. _mesh_ calls **Salome Meca**, and executes a script in the **Salome Meca Python console** to generate the meshes.
+ 
+  - A simulation is executed with the generated mesh, using the _sim_ module. _sim_ calls **Code Aster**, and executes a pre-defined .comm file to run the simulation. The .comm file specifies the particular of the **Code Aster** FEM simulation, and is commented accordingly. A pre-existing knowledge of Code Aster is required.
+
 # Pre-requisites
 The use of OpenBoltRF assumes execution on Ubuntu (tested on 18.04.6 LTS, no guarantee on other versions), with access to the following pre-requisites:- 
   - FreeCAD 0.21.0     or later
@@ -12,9 +25,9 @@ The use of OpenBoltRF assumes execution on Ubuntu (tested on 18.04.6 LTS, no gua
     - matplotlib>=3.3.2
     - numpy>=1.19.2
     - pandas>=1.2.1
-
-
-the following tools are pre-installed 
+   
+# Instructions for use
+At this stage OpenBoltRF is not designed as Python package. It is only designed to be downloaded to a relevant project folder, and be called directly in that project folder.
 
 # Contact
 Please email jack.jorgensen@research.uwa.edu.au for any queries related to the workflow. Any queries specific to the tools used (FreeCAD, Salome Meca / Code Aster, & Paraview) should be directed toward the relevant software communities.
