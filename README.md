@@ -3,7 +3,7 @@
 
 OpenBoltRF is an open-source workflow to analyse the load transfer for geometrically imperfect bolted ring-flanges in offshore wind turbine support structures. It is intended as a lightweight, portable package for users familiar with FreeCAD, Salome Meca / Code Aster, Paraview, and Python. 
 
-https://zenodo.org/badge/latestdoi/683682811
+[![DOI](https://zenodo.org/badge/683682811.svg)](https://zenodo.org/badge/latestdoi/683682811)
 
 # Structure
 The package contains a script for controlling all actions, _main.py_. 
