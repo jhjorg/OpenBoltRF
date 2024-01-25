@@ -1,48 +1,56 @@
 # OpenBoltRF
 ## An open-source workflow to analyse load transfer for geometrically imperfect bolted ring-flanges in offshore wind turbines.
 
-OpenBoltRF is an open-source workflow to analyse the load transfer for geometrically imperfect bolted ring-flanges in offshore wind turbine support structures. It is intended as a lightweight, portable package for users familiar with FreeCAD, Salome Meca / Code Aster, Paraview, and Python. The package is introduced in a paper from the TORQUE 2024 conference - ![#f03c15](https://placehold.co/15x15/f03c15/f03c15.png) `#f03c15`
+OpenBoltRF is an open-source workflow to analyse the load transfer for geometrically imperfect bolted ring-flanges in offshore wind turbine support structures. It is intended as a lightweight, portable package for users familiar with FreeCAD, Salome Meca / Code Aster, Paraview, and Python. The package is introduced in a paper from the TORQUE 2024 conference - ![#f03c15](https://placehold.co/15x15/f03c15/f03c15.png) (LINK TO PAPER HERE) ![#f03c15](https://placehold.co/15x15/f03c15/f03c15.png)
 
 [![DOI](https://zenodo.org/badge/683682811.svg)](https://zenodo.org/badge/latestdoi/683682811)
 
+We use four open-source packages in our workflow:- the Python programming language, the FreeCAD 3D parametric modelling package, the Code Aster / Salome-Meca FEM simulation environment, and the ParaView post-processing package. 
+
+
 # Structure
-The package contains a script for controlling all actions, _main.py_. 
 
-Within _main.py_, a datafile specifying the parameters of the flange (dimensions, material properties), _Flange_params.py_, is imported. A setup file specifying the particulars of the project (filenames, paths etc.), _setup.py_, is also imported by _main.py_. The values for variables in both _Flange_params.py_ and _setup.py_ may be configured by the user, but the variables names must not be altered.
+The workflow is summarised in the figure below. 
 
-With the flange parameters and project details specified the execution of the workflow may be completed. The general order is as follows:-
+  - All actions are controlled by a main Python script, _main.py_.
 
-  - The geometry is generated using the _geom_ module. _geom_ calls **FreeCAD**, and executes a script in the **FreeCAD Python console** to generate .stp files for the flange under study.
- 
-  - A mesh is generated from the .stp files, using the _mesh_ module. _mesh_ calls **Salome Meca**, and executes a script in the **Salome Meca Python console** to generate the meshes.
- 
-  - A simulation is executed with the generated mesh, using the _sim_ module. _sim_ calls **Code Aster**, and executes a pre-defined .comm file to run the simulation.
-    - The .comm file specifies the particular of the **Code Aster** FEM simulation, and is commented accordingly. A pre-existing knowledge of Code Aster is required.
-    - The simulation is executed using an _export_ file, which specifies simulation details such as number of processor cores, simulation memory limit, scratch location, output file location etc. Such parameters are configured in the _setup_ file dictated above.
-    - Proceeding past this point in the workflow is contingent on the succesful convergence of the _Code Aster_ simulation.
-    
-  - Post processing is executed on a successful=ly converged FEM simulation result, using the _post_pro_ module. _post_pro_ calls **Salome Meca**, and executes a script in the **Paravis Python console** to generate summary results for the simulation.
+  - A Python script with all flange dimensions is prepared, named _flange_params.py_.
+
+  - A Python script, _geom_frc.py_, is executed via a subprocess command at the FreeCAD command line, to create a parametric flange geometry based on _flange_params.py_. The flange geometry is saved as 4 .stp files - the top & bottom flange + shells, the bolt, and the nut.
+
+  - A Python script, _mesh_sm.py_, is executed via a subprocess command at the Salome Meca command line, to create a compound mesh object of the .stp geometries. The geometry imperfections are implemented in the mesh.
   
-  - Further analysis and visualisation TBA. 
+  - The Code Aster FEM solver is called via a subprocess command to run a simulation based on defined _export_ and _.comm_ files, and using the generated mesh. The _.comm_ file defines the simulation features, and the _export_ file defines the simulation management parameters (which _.comm_ file to use, number of processor cores, simulation memory limit, scratch location, output file location etc.).
+  
+  - A Python script, _postp_pv.py_, is executed via a subprocess command at the Paraview command line inside Salome Meca, to post-process FEM simulation results. Useful results, including the decomposed axial and bending loads in particular bolts on the flange are calculated.
+
+  - A Python script, _fatigue.py_, is executed to calculate fatigue damage from a given load cycle, given the load transfer function determined via the FEM simulations.  
+
+![Workflow](https://github.com/jhjorg/OpenBoltRF/assets/70005890/29766f6e-cfc9-46c1-9e97-650cdcbe18b3)
+
+Mesh and parametric studies can be performed with the provided looping structure in the _main.py_ script. 
 
 # Pre-requisites
-The use of OpenBoltRF assumes execution on Ubuntu (tested on 18.04.6 LTS, no guarantee on other versions), with access to the following pre-requisites:- 
-  - FreeCAD 0.21.0     or later
-  - Salome Meca 2021   or later
-    - Singularity container installation, including Paravis
-  - Python 3.8.5       or later
-    - matplotlib>=3.3.2
-    - numpy>=1.19.2
-    - pandas>=1.2.1
+The use of OpenBoltRF assumes execution on a Linux OS (tested on Ubuntu 18.04.6 LTS, no guarantee on other versions), with access to the following pre-requisites:- 
+  - FreeCAD 0.21.0     or later (https://github.com/FreeCAD/FreeCAD-Bundle/releases/tag/0.21.0)
+  - Salome Meca 2021   or later (https://code-aster.org/FICHIERS/singularity/salome_meca-lgpl-2021.0.0-0-20210601-scibian-9.sif)
+    - Singularity container installation, including Paravis distribution of Paraview
+  - Python 3.8.5       or later 
+
+Instructions on installation of these tools can be found from respective websites. 
+
+The Python packages required for execution on the _main.py_ and _fatigue.py_ scripts are 
    
 # Instructions for use
 At this stage OpenBoltRF is not designed as a Python package. It is only designed to be downloaded to a relevant project folder, and be called directly in that project folder.
 
   - Download the repository to '/path/to/your/project'
     
-  - Edit the _setup.py_ file to tailor to your project path and simulation requirements
+  - Edit the _main.py_ file to tailor to your project path
     
-  - Edit the _Flange_params.py_ datafile to tailor to your bolted ring-flange
+  - Edit the _flange_params.py_ datafile to tailor to your bolted ring-flange
+
+  - Edit the _.comm_ and _export_ files to tailor to your simulation settings (no. of processor, RAM, scratch location etc.)
     
   - Run the _main.py_ script to generate a result
 
