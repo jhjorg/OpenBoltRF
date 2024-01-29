@@ -1,5 +1,4 @@
-
-![Full_flange](https://github.com/jhjorg/OpenBoltRF/assets/70005890/f61b2e8c-bf70-48b4-bbbc-d7468b080c32)
+<img src= 'https://github.com/jhjorg/OpenBoltRF/assets/70005890/f61b2e8c-bf70-48b4-bbbc-d7468b080c32' width = '400'>
 
 # OpenBoltRF
 ## An open-source workflow to analyse load transfer for geometrically imperfect bolted ring-flanges in offshore wind turbines.
