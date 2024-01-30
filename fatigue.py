@@ -11,7 +11,6 @@ __email__ = "jack.jorgensen@research.uwa.edu.au"
 __status__ = "Development"
 # endregion
 
-
 # region Import required packages and modules
 
 # Packages
