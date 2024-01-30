@@ -1,3 +1,5 @@
+<img src= 'https://github.com/jhjorg/OpenBoltRF/assets/70005890/f61b2e8c-bf70-48b4-bbbc-d7468b080c32' width = '400'>
+
 # OpenBoltRF
 ## An open-source workflow to analyse load transfer for geometrically imperfect bolted ring-flanges in offshore wind turbines.
 
@@ -18,7 +20,7 @@ The workflow is summarised in the figure below.
 
   - A Python script, _geom_frc.py_, is executed via a subprocess command at the FreeCAD command line, to create a parametric flange geometry based on _flange_params.py_. The flange geometry is saved as 4 .stp files - the top & bottom flange + shells, the bolt, and the nut.
 
-  - A Python script, _mesh_sm.py_, is executed via a subprocess command at the Salome Meca command line, to create a compound mesh object of the .stp geometries. The geometry imperfections are implemented in the mesh.
+  - A Python script, _mesh_sm.py_, is executed via a subprocess command at the Salome Meca command line, to create a compound mesh object of the .stp geometries. The geometry imperfections are implemented in with the script _mesh_imperf.py_, and can be explicitly specified with height / angle, or can be specified as random according to the work of Buchholz & Seidel [1].
   
   - The Code Aster FEM solver is called via a subprocess command to run a simulation based on defined _export_ and _.comm_ files, and using the generated mesh. The _.comm_ file defines the simulation features, and the _export_ file defines the simulation management parameters (which _.comm_ file to use, number of processor cores, simulation memory limit, scratch location, output file location etc.).
   
@@ -39,7 +41,7 @@ The use of OpenBoltRF assumes execution on a Linux OS (tested on Ubuntu 18.04.6 
 
 Instructions on installation of these tools can be found from respective websites. 
 
-The Python packages required for execution on the _main.py_ and _fatigue.py_ scripts are 
+The Python packages required for execution on the _main.py_ and _fatigue.py_ scripts are collected in _requirements.txt_. The extra Python packages used in other scripts (for example _salome_, _GEOM_ etc. in _mesh_sm.py_) are application specific, and should be installed in the packaged Python distribution internal to the applications (FreeCAD, Salome Meca and ParaView).
    
 # Instructions for use
 At this stage OpenBoltRF is not designed as a Python package. It is only designed to be downloaded to a relevant project folder, and be called directly in that project folder.
@@ -56,3 +58,6 @@ At this stage OpenBoltRF is not designed as a Python package. It is only designe
 
 # Contact
 Please email jack.jorgensen@research.uwa.edu.au for any queries related to the workflow. Any queries specific to the tools used (FreeCAD, Salome Meca / Code Aster, & Paraview) should be directed toward the relevant software communities.
+
+# References
+[1] Buchholz A and Seidel M 2023, "Gap height prediction for bolted ring flange connections based on measurements", _Steel Construction_ 16 114–126
