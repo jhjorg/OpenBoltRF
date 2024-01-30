@@ -1,0 +1,432 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Code Aster run-file
+
+# Import packages
+import sys
+import platform
+
+# Set path
+path_pre = "/path/to/your/project/"
+                
+folder = "/OpenBoltRF/"
+path_pre_folder = r"{}".format(path_pre+folder)
+
+# Flange Parameters
+
+sys.path.append(path_pre_folder)
+
+from Flange_params import * # Import flange parameters to allow calc set-up
+
+# Code Aster run
+DEBUT(LANG='EN', PAR_LOT='NON')
+
+# Simulation set-up
+    # Time
+t_end = 1.6   # time for quasi-static simulation
+
+   # Mesh
+mesh = LIRE_MAILLAGE(UNITE=4)
+
+   # Model
+model = AFFE_MODELE(AFFE=(_F(MODELISATION=('3D', ),
+                             PHENOMENE='MECANIQUE',
+                             TOUT='OUI'),
+                          _F(GROUP_MA=('Moment_0d' ),
+                             MODELISATION=('DIS_TR', ),
+                             PHENOMENE='MECANIQUE'),
+                        _F(GROUP_MA=('a0D'),
+                             MODELISATION=('DIS_TR', ),
+                             PHENOMENE='MECANIQUE')),
+                    MAILLAGE=mesh)
+
+    # 0D Elements for spring support and moment application
+elems_0D = AFFE_CARA_ELEM(MODELE=model,
+                     INFO=2,
+                     DISCRET=(_F(CARA='M_TR_D_N',
+                                 GROUP_MA='Moment_0d',
+                                 VALE=[1,0.0,0.0,0.0,0.0,0.0,0.0,0.00,0.00,0.00]),
+                              _F(CARA='K_TR_D_N',
+                                 GROUP_MA='Moment_0d',
+                                 VALE=[0.0,0.0,0.0,0.0,0.0,0.0]),
+				              _F(CARA='K_TR_D_N',
+                                 GROUP_MA=('a0D', ),
+                                 VALE=(100, 100, 100, 100, 100, 100)),),)
+
+# M_0D = AFFE_CARA_ELEM(MODELE=model,
+#                      INFO=2,
+#                      DISCRET=(_F(CARA='M_TR_D_N',
+#                                  GROUP_MA='Moment_0d',
+#                                  VALE=[0,0.0,0.0,0.0,0.0,0.0,0.0,0.00,0.00,0.00]),
+#                               _F(CARA='K_TR_D_N',
+#                                  GROUP_MA='Moment_0d',
+#                                  VALE=[0.0,0.0,0.0,0.0,0.0,0.0]),),)
+
+#     # Spring support at 0D nodes
+# spring = AFFE_CARA_ELEM(DISCRET=_F(CARA='K_TR_D_N',
+#                                    GROUP_MA=('a0D', ),
+#                                    VALE=(100, 100, 100, 100, 100, 100)),
+#                         MODELE=model)
+
+    # Shell material definition
+Shell_mat = DEFI_MATERIAU(ECRO_LINE=_F(D_SIGM_EPSI=E_T_X,
+                                  EPSI_LIM=epsi_y_X,
+                                  SIGM_LIM=sig_U_X,
+                                  SY=sig_y_X),
+                     ELAS=_F(E=E_X,
+                             NU=nu_X,
+                             RHO=rho_X))
+
+    # Flange material definition
+Flange_mat = DEFI_MATERIAU(ECRO_LINE=_F(D_SIGM_EPSI=E_T_F,
+                                  EPSI_LIM=epsi_y_F,
+                                  SIGM_LIM=sig_U_F,
+                                  SY=sig_y_F),
+                     ELAS=_F(E=E_F,
+                             NU=nu_F,
+                             RHO=rho_F))
+
+    # Bolt material definition
+Bolt_mat = DEFI_MATERIAU(ECRO_LINE=_F(D_SIGM_EPSI=E_T_G,
+                                   EPSI_LIM=epsi_U_G,
+                                   SIGM_LIM=sig_U_G,
+                                   SY=sig_y_G),
+                      ELAS=_F(E=E_G,
+                             NU=nu_G,
+                             RHO=rho_G))
+
+    # Material assignment
+fieldmat = AFFE_MATERIAU(AFFE=(_F(GROUP_MA=('Bottom_shell', 'Top_shell'),
+                                  MATER=Shell_mat),
+                               _F(GROUP_MA=('Bottom_flange', 'Top_flange'),
+                                  MATER=Flange_mat),   
+                               _F(GROUP_MA=('Bolt_nut'),
+                                  MATER=Bolt_mat)),
+                         MAILLAGE=mesh)
+
+    # Definition of load ramp
+Ramp = DEFI_FONCTION(NOM_PARA='INST',
+                     VALE=(0.0, 0.0, 1.0, 0.0, 1.2, 0.2, 1.4, 0.4, 1.6, 0.6, 1.8, 0.8, 2.0, 1.0))
+
+    # Definition of time intervals
+listr = DEFI_LIST_REEL(DEBUT=0.0,
+                       INTERVALLE=(_F(JUSQU_A=1.0,
+                                      NOMBRE=2),
+                                   _F(JUSQU_A=t_end,
+                                      NOMBRE=3)))
+
+    # Definition of timestep cutting
+times = DEFI_LIST_INST(ADAPTATION=_F(CRIT_COMP='LE',
+                                     EVENEMENT='SEUIL',
+                                     MODE_CALCUL_TPLUS='FIXE',
+                                     NB_INCR_SEUIL=1,
+                                     NOM_PARA='NB_ITER_NEWTON',
+                                     PCENT_AUGM=100,
+                                     VALE_I=5),
+                       DEFI_LIST=_F(LIST_INST=listr,
+                                    PAS_MINI=1e-05),
+                       ECHEC=(_F(ACTION='ITER_SUPPL',
+                                 EVENEMENT='ERREUR',
+                                 PCENT_ITER_PLUS=20,
+                                 SUBD_METHODE='MANUEL',
+                                 SUBD_NIVEAU=4,
+                                 SUBD_PAS=4,
+                                 SUBD_PAS_MINI=1e-05),
+                              _F(ACTION='DECOUPE',
+                                 EVENEMENT='RESI_MAXI',
+                                 RESI_GLOB_MAXI=10000000000,
+                                 SUBD_METHODE='MANUEL',
+                                 SUBD_NIVEAU=4,
+                                 SUBD_PAS=2,
+                                 SUBD_PAS_MINI=1e-05)),
+                       METHODE='AUTO')
+
+    # Definition of output data timesteps
+storing = DEFI_LIST_REEL(DEBUT=0.0,
+                         INTERVALLE=_F(JUSQU_A=t_end,
+                                       NOMBRE=10))
+
+    # Preload force function
+Preload = DEFI_FONCTION(NOM_PARA='INST',
+                       VALE=(0.0, 0.0, 1.0, 1.0, 2.0, 1.0))
+
+    # Fixed boundary condition
+        # Fixed support
+Fixed_supp = AFFE_CHAR_MECA(DDL_IMPO=_F(DX=0.0,
+                                   DY=0.0,
+                                   DZ=0.0,
+                                   GROUP_MA=('BF_Fix', )),
+                       MODELE=model)
+
+        # Moment application point fixed
+Node_fix = AFFE_CHAR_MECA(DDL_IMPO=_F(DX=0.0,
+                                DY=0.0,
+                                DZ=0.0,
+                                DRX = 0.0,
+                                DRY=0.0,
+                                DRZ=0.0,
+                                GROUP_MA=('Moment_0d', )),
+                    MODELE=model)
+
+    # Load boundary condition - pressure or moment
+if load_switch == 0:
+    Seg_Load = AFFE_CHAR_MECA(FORCE_FACE=_F(FZ=sig_F_z,
+                                        GROUP_MA=('TF_Load', )),
+                        MODELE=model)
+elif load_switch ==1:
+        # Rigid constraint for application of moment
+    Rigid_0D = AFFE_CHAR_MECA(INFO=1,
+                      MODELE=model,
+                      LIAISON_ELEM=_F(GROUP_MA_1='TF_Load',
+                                      GROUP_MA_2='Moment_0d',
+                                      OPTION='3D_POU'),)
+        # Moment application
+    Moment = AFFE_CHAR_MECA(MODELE=model,
+                       FORCE_NODALE=_F(GROUP_NO='Moment_node',MY=M_y,),); 
+
+    # Glued contacts between nuts / bolts & flanges
+Con_Fix = [None]*(bolt_sym_num)
+for i in range(0,bolt_sym_num):
+    Nut_grp = 'Nut_con_face'+str(i)
+    Bolt_grp = 'Bolt_con_face'+str(i)
+    Con_Fix[i] = AFFE_CHAR_MECA(LIAISON_MAIL=(_F(GROUP_MA_ESCL=(Nut_grp, ),
+                                            GROUP_MA_MAIT=('Bottom_flange', ),
+                                            TYPE_RACCORD='MASSIF'),
+                                        _F(GROUP_MA_ESCL=(Bolt_grp, ),
+                                            GROUP_MA_MAIT=('Top_flange', ),
+                                            TYPE_RACCORD='MASSIF')),
+                            MODELE=model)
+
+    # Symmetry boundary condition on flange faces
+Seg_sym = AFFE_CHAR_MECA(DDL_IMPO=_F(DY=0.0,
+                                     GROUP_MA=('Sym_1' ),
+                                     SANS_GROUP_MA=('T_Flange_con', 'BF_Fix')),
+                         LIAISON_OBLIQUE=_F(ANGL_NAUT=(-flange_sym_ang, ),
+                                            DY=0.0,
+                                            GROUP_MA=('Sym_2'),
+                                            SANS_GROUP_MA=('T_Flange_con', 'BF_Fix')),
+                         MODELE=model)
+
+    # Contact between flange faces
+fla_con = DEFI_CONTACT(ALGO_RESO_CONT='NEWTON',
+                       ALGO_RESO_FROT='POINT_FIXE',
+                       ALGO_RESO_GEOM='NEWTON',
+                       FORMULATION='CONTINUE',
+                       FROTTEMENT='COULOMB',
+                       ITER_FROT_MAXI=10,
+                       LISSAGE='NON',
+                       MODELE=model,
+                       RESI_FROT=0.0001,
+                       RESI_GEOM=1e-05,
+                       STOP_INTERP='NON',
+                       VERI_NORM='OUI',
+                       ZONE=_F(ADAPTATION='CYCLAGE',
+                               ALGO_CONT='PENALISATION',
+                               ALGO_FROT='PENALISATION',
+                               APPARIEMENT='MAIT_ESCL',
+                               COEF_PENA_CONT=10000000000000.0,
+                               COEF_PENA_FROT=10000,
+                               CONTACT_INIT='INTERPENETRE',
+                               COULOMB=0.2,
+                               DIST_APPA=-1.0,
+                               DIST_COQUE='NON',
+                               DIST_POUTRE='NON',
+                               GLISSIERE='NON',
+                               GROUP_MA_ESCL=('T_Flange_con', ),
+                               GROUP_MA_MAIT=('B_Flange_con', ),
+                               INTEGRATION='AUTO',
+                               NORMALE='MAIT',
+                               RESOLUTION='OUI',
+                               TOLE_PROJ_EXT=0.5,
+                               TYPE_PROJECTION='ORTHOGONALE',
+                               VECT_ESCL='AUTO',
+                               VECT_MAIT='AUTO'))
+
+    # Tensioning tie between bolt and nut
+tens = [None]*(bolt_sym_num)
+for i in range(0,bolt_sym_num):
+    Nut_grp = 'Nut_thread_face'+str(i)
+    Bolt_grp = 'Bolt_assem_vol'+str(i)
+    tens[i] = AFFE_CHAR_MECA(LIAISON_MAIL=_F(DDL_ESCL='DNOR',
+                                            DDL_MAIT='DNOR',
+                                            GROUP_MA_ESCL=(Nut_grp, ),
+                                            GROUP_MA_MAIT=(Bolt_grp, ),
+                                            TYPE_RACCORD='MASSIF'),
+                            MODELE=model)
+
+    # Preload force application
+preload = [None]*(bolt_sym_num)
+for i in range(0,bolt_sym_num):
+    Nut_grp = 'Nut_thread_face'+str(i)
+    Bolt_grp = 'Bolt_thread_face'+str(i)    
+    preload[i] = AFFE_CHAR_MECA(FORCE_FACE=(_F(FZ=sig_F_v_b,
+                                            GROUP_MA=(Bolt_grp, )),
+                                        _F(FZ=sig_F_v_n,
+                                            GROUP_MA=(Nut_grp, ))),
+                            MODELE=model)
+
+    # Tensioning lock between nut & bolt
+lock = [None]*(bolt_sym_num)
+for i in range(0,bolt_sym_num):
+    Nut_grp = 'Nut_thread_face'+str(i)
+    Bolt_grp = 'Bolt_assem_vol'+str(i)
+    lock[i] = AFFE_CHAR_MECA(LIAISON_MAIL=_F(GROUP_MA_ESCL=(Nut_grp, ),
+                                        GROUP_MA_MAIT=(Bolt_grp, ),
+                                        TYPE_RACCORD='MASSIF'),
+                        MODELE=model)
+
+    # Boundary conditions assembly for passing to EXCIT
+        # Preload step
+load_pre = []
+load_pre.append(_F(CHARGE = Fixed_supp,),) # Fixed support
+load_pre.append(_F(CHARGE = Seg_sym,),) # Symmetry faces
+load_pre.append(_F(CHARGE=Node_fix),) # Fix moment point
+            # Add BCs
+for i in range(0,bolt_sym_num):
+    load_pre.append(_F(CHARGE=tens[i],),)
+    load_pre.append(_F(CHARGE=Con_Fix[i],),)
+    load_pre.append(_F(CHARGE=preload[i],FONC_MULT=Preload),)
+ 
+        # Load step
+load_ext = []
+load_ext.append(_F(CHARGE = Fixed_supp,),) # Fixed support
+load_ext.append(_F(CHARGE = Seg_sym,),) # Symmetry faces
+            # Load switch for pressure or moment
+if load_switch == 0: # Apply pressure load
+    load_ext.append(_F(CHARGE=Seg_Load,FONC_MULT=Ramp),) # Apply segment loads
+    load_ext.append(_F(CHARGE=Node_fix),) # Fix moment point
+elif load_switch == 1:  # Apply moment load
+    load_ext.append(_F(CHARGE = Rigid_0D),) # Create rigid tie to upper face
+    load_ext.append(_F(CHARGE = Moment,FONC_MULT=Ramp),) # Moment application
+            # Add BCs
+for i in range(0,bolt_sym_num):
+    load_ext.append(_F(CHARGE=lock[i], TYPE_CHARGE = 'DIDI',),)
+    load_ext.append(_F(CHARGE=Con_Fix[i],),)
+
+    # Material deformation law assembly for passing to COMPORTMENT
+deform = []
+deform_bn = [None]*(bolt_sym_num)
+deform.append(_F(DEFORMATION='SIMO_MIEHE', GROUP_MA=('Top_flange', 'Bottom_flange'), RELATION='VMIS_ISOT_LINE'),)
+deform.append(_F(DEFORMATION='SIMO_MIEHE', GROUP_MA=('Top_shell', 'Bottom_shell'), RELATION='VMIS_ISOT_LINE'),)
+for i in range(0,bolt_sym_num):
+    Nut_grp = 'Nut_Washer_vol'+str(i)
+    Bolt_grp = 'Bolt_assem_vol'+str(i)
+    deform_bn[i] = _F(DEFORMATION='SIMO_MIEHE', GROUP_MA=(Nut_grp, Bolt_grp), RELATION='VMIS_ISOT_LINE')
+    deform.append(deform_bn[i])
+
+# Simulation execution
+    # Preload step
+Pre_step = STAT_NON_LINE(CARA_ELEM=elems_0D,
+                         CHAM_MATER=fieldmat,
+                         COMPORTEMENT=deform,
+                         CONTACT=fla_con,
+                         CONVERGENCE=_F(ITER_GLOB_ELAS=20,
+                                        ITER_GLOB_MAXI=20,
+                                        RESI_GLOB_RELA=5e-06),
+                         EXCIT=load_pre,
+                         INCREMENT=_F(INST_FIN=1.0,
+                                      LIST_INST=times),
+                         METHODE='NEWTON',
+                         MODELE=model,
+                         NEWTON=_F(MATRICE='TANGENTE',
+                                   MATR_RIGI_SYME='NON',
+                                   PREDICTION='TANGENTE',
+                                   REAC_INCR=1,
+                                   REAC_ITER=1),
+                         SOLVEUR=_F(ACCELERATION='AUTO',
+                                    ELIM_LAGR='LAGR2',
+                                    FILTRAGE_MATRICE=-1,
+                                    GESTION_MEMOIRE='AUTO',
+                                    LOW_RANK_SEUIL=0.0,
+                                    MATR_DISTRIBUEE='OUI',
+                                    METHODE='MUMPS',
+                                    MIXER_PRECISION='NON',
+                                    NPREC=10,
+                                    PCENT_PIVOT=20,
+                                    POSTTRAITEMENTS='AUTO',
+                                    PRETRAITEMENTS='AUTO',
+                                    RENUM='SCOTCH',
+                                    RESI_RELA=-1,
+                                    STOP_SINGULIER='OUI',
+                                    TYPE_RESOL='AUTO'))
+
+    # Loading step - applciation of external load
+Load_step = STAT_NON_LINE(CARA_ELEM=elems_0D,
+                         CHAM_MATER=fieldmat,
+                         COMPORTEMENT=deform,
+                                          
+                         CONTACT=fla_con,
+                         CONVERGENCE=_F(ITER_GLOB_ELAS=20,
+                                        ITER_GLOB_MAXI=20,
+                                        RESI_GLOB_RELA=5e-06),
+                         ETAT_INIT=_F(EVOL_NOLI=Pre_step),
+                         EXCIT=load_ext,
+                         INCREMENT=_F(INST_FIN=t_end,
+                                      INST_INIT=1.0,
+                                      LIST_INST=times),
+                         METHODE='NEWTON',
+                         MODELE=model,
+                         NEWTON=_F(MATRICE='TANGENTE',
+                                   MATR_RIGI_SYME='NON',
+                                   PREDICTION='TANGENTE',
+                                   REAC_INCR=1,
+                                   REAC_ITER=1),
+                         SOLVEUR=_F(ACCELERATION='AUTO',
+                                    ELIM_LAGR='LAGR2',
+                                    FILTRAGE_MATRICE=-1,
+                                    GESTION_MEMOIRE='AUTO',
+                                    LOW_RANK_SEUIL=0.0,
+                                    MATR_DISTRIBUEE='OUI',
+                                    METHODE='MUMPS',
+                                    MIXER_PRECISION='NON',
+                                    NPREC=10,
+                                    PCENT_PIVOT=20,
+                                    POSTTRAITEMENTS='AUTO',
+                                    PRETRAITEMENTS='AUTO',
+                                    RENUM='SCOTCH',
+                                    RESI_RELA=-1,
+                                    STOP_SINGULIER='OUI',
+                                    TYPE_RESOL='AUTO'))
+
+# Simulation post-processing
+    # Extract results for preload step
+Pre_step = CALC_CHAMP(reuse=Pre_step,
+                      CRITERES=('SIEQ_NOEU'),
+                      DEFORMATION=('EPSI_NOEU'),
+                      RESULTAT=Pre_step)
+
+    # Extract results for loading step
+Load_step = CALC_CHAMP(reuse=Load_step,
+                      CRITERES=('SIEQ_NOEU'),
+                      DEFORMATION=('EPSI_NOEU'),
+                      RESULTAT=Load_step)
+
+    # Extract a table of bolt loads
+# F_bolt = POST_RELEVE_T(ACTION=(_F(GROUP_NO=('Bolt_thread', ),
+#                                   INTITULE='bolt_force_1',
+#                                   NOM_CHAM='FORC_NODA',
+#                                   OPERATION=('EXTRACTION', ),
+#                                   RESULTANTE=('DX', 'DY', 'DZ'),
+#                                   RESULTAT=Pre_step),
+#                                _F(GROUP_NO=('Bolt_thread', ),
+#                                   INTITULE='bolt_force_2',
+#                                   NOM_CHAM='FORC_NODA',
+#                                   OPERATION=('EXTRACTION', ),
+#                                   RESULTANTE=('DX', 'DY', 'DZ'),
+#                                   RESULTAT=Load_step)))
+
+    # Write results to .rmed file
+IMPR_RESU(FORMAT='MED',
+          RESU=(_F(CARA_ELEM=elems_0D,
+                   RESULTAT=Pre_step),
+                _F(CARA_ELEM=elems_0D,
+                   RESULTAT=Load_step)),
+          UNITE=3)
+
+    # Write table
+# IMPR_TABLE(FORMAT='TABLEAU',
+#            TABLE=F_bolt,
+#            UNITE=8)
+
+FIN()

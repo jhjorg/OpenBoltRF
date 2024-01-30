@@ -1,0 +1,25 @@
+P actions make_etude
+P debug nodebug
+P memjob 28672000
+P memory_limit 58000
+P mode interactif
+P mpi_nbcpu 1
+P studyid Torque1
+P mpi_nbnoeud 1
+P ncpus 8
+P nomjob RunCase1
+P origine AsterStudy 0.11
+P proxy_dir /mnt/tmp
+P rep_trav /mnt/tmp/Run_1
+P server localhost
+P time_limit 172800.0
+P tpsjob 1216
+P version 15.4
+A memjeveux 3500.0
+A tpmax 72900.0
+F comm /mnt/Flange_run.comm D  1
+F libr /mnt/Compound_Mesh_1.med D  4
+F rmed /mnt/Out1.rmed R  3
+F libr /mnt/Out2.rmed R  8
+F mess /mnt/message R  6
+R base /mnt/base-stage1 R  0
