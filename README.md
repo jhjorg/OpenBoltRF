@@ -39,7 +39,7 @@ The use of OpenBoltRF assumes execution on a Linux OS (tested on Ubuntu 18.04.6 
     - Singularity container installation, including Paravis distribution of Paraview
   - Python 3.8.5       or later 
 
-Instructions on installation of these tools can be found from respective websites. 
+Instructions on installation of these tools can be found from respective websites. Note, not tested on MPI version of Code Aster / Salome Meca.
 
 The Python packages required for execution on the _main.py_ and _fatigue.py_ scripts are collected in _requirements.txt_. The extra Python packages used in other scripts (for example _salome_, _GEOM_ etc. in _mesh_sm.py_) are application specific, and should be installed in the packaged Python distribution internal to the applications (FreeCAD, Salome Meca and ParaView).
    
