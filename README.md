@@ -4,7 +4,7 @@
 [![DOI](https://zenodo.org/badge/683682811.svg)](https://zenodo.org/badge/latestdoi/683682811)
 ## An open-source workflow to analyse load transfer for geometrically imperfect bolted ring-flanges in offshore wind turbines.
 
-OpenBoltRF is an open-source workflow to analyse the load transfer for geometrically imperfect bolted ring-flanges in offshore wind turbine support structures. It is intended as a lightweight, portable package for users familiar with FreeCAD, Salome Meca / Code Aster, Paraview, and Python. The package is introduced in a paper from the TORQUE 2024 conference entitled _An open-source analysis workflow for geometrically imperfect bolted ring-flanges in wind turbine support structures_ - ![#f03c15](https://placehold.co/15x15/f03c15/f03c15.png) (LINK TO PAPER HERE) ![#f03c15](https://placehold.co/15x15/f03c15/f03c15.png)
+OpenBoltRF is an open-source workflow to analyse the load transfer for geometrically imperfect bolted ring-flanges in offshore wind turbine support structures. It is intended as a lightweight, portable package for users familiar with FreeCAD, Salome Meca / Code Aster, Paraview, and Python. The package is introduced in a paper from the TORQUE 2024 conference entitled _An open-source analysis workflow for geometrically imperfect bolted ring-flanges in wind turbine support structures_ - (https://iopscience.iop.org/article/10.1088/1742-6596/2767/6/062004)
 
 We use four open-source packages in our workflow:- the Python programming language, the FreeCAD 3D parametric modelling package, the Code Aster / Salome-Meca FEM simulation environment, and the ParaView post-processing package. 
 
